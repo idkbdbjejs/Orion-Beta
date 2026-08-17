@@ -1,4 +1,4 @@
-name: Build ORION APK
+name: ORION APK erstellen
 
 on:
   workflow_dispatch:
@@ -8,26 +8,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Code herunterladen
+      - name: Repository laden
         uses: actions/checkout@v4
 
-      - name: Java 17 einrichten
+      - name: Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Android SDK einrichten
+      - name: ZIP entpacken
+        run: |
+          mkdir orion
+          unzip -q ORION-API-repariert.zip -d orion
+
+      - name: Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Gradle installieren
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+
       - name: APK bauen
-        working-directory: distribution/native/android
-        run: |
-          chmod +x gradlew
-          ./gradlew assembleDebug
+        working-directory: orion/distribution/native/android
+        run: gradle --no-daemon assembleDebug
 
       - name: APK bereitstellen
         uses: actions/upload-artifact@v4
         with:
           name: ORION-apk
-          path: distribution/native/android/app/build/outputs/apk/debug/*.apk
+          path: orion/distribution/native/android/app/build/outputs/apk/debug/app-debug.apk
